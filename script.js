@@ -1,14 +1,29 @@
-// Get products from localStorage
-function getProducts() {
+// Check if Firebase is available
+const useFirebase = typeof db !== 'undefined' && db !== null;
+
+// Get products from localStorage (fallback)
+function getProductsFromLocalStorage() {
     const products = localStorage.getItem('roseCollectionProducts');
     return products ? JSON.parse(products) : [];
 }
 
 // Display products
-function displayProducts(filterCategory = 'all') {
-    const products = getProducts();
+async function displayProducts(filterCategory = 'all') {
     const productsGrid = document.getElementById('products-grid');
     const noProducts = document.getElementById('no-products');
+
+    // Show loading
+    productsGrid.innerHTML = '<div style="text-align: center; padding: 3rem; grid-column: 1/-1;"><div class="loading"></div><p>Loading products...</p></div>';
+
+    let products = [];
+
+    if (useFirebase) {
+        // Get products from Firebase
+        products = await getProductsFromFirebase();
+    } else {
+        // Fallback to localStorage
+        products = getProductsFromLocalStorage();
+    }
 
     // Filter products
     const filteredProducts = filterCategory === 'all'
@@ -24,10 +39,14 @@ function displayProducts(filterCategory = 'all') {
     noProducts.style.display = 'none';
     productsGrid.innerHTML = filteredProducts.map(product => `
         <div class="product-card" data-category="${product.category}">
+            ${product.sku ? `<div class="product-badge">
+                <i class="fas fa-barcode"></i> ${product.sku}
+            </div>` : ''}
             <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
             <div class="product-info">
                 <span class="product-category">${product.category}</span>
                 <h3 class="product-name">${product.name}</h3>
+                ${product.size ? `<p class="product-size"><i class="fas fa-ruler"></i> Size: ${product.size}</p>` : ''}
                 <p class="product-description">${product.description || 'Premium quality product'}</p>
                 <div class="product-price">₹${parseFloat(product.price).toFixed(2)}</div>
                 <div class="product-stock">
@@ -35,7 +54,7 @@ function displayProducts(filterCategory = 'all') {
                         ? `<i class="fas fa-check-circle" style="color: green;"></i> In Stock (${product.stock})`
                         : '<i class="fas fa-times-circle" style="color: red;"></i> Out of Stock'}
                 </div>
-                <button class="buy-btn" onclick="buyProduct(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${product.price})" ${product.stock === 0 ? 'disabled' : ''}>
+                <button class="buy-btn" onclick="buyProduct('${product.sku || product.id}', '${product.name.replace(/'/g, "\\'")}', ${product.price}, '${product.size || ''}')" ${product.stock === 0 ? 'disabled' : ''}>
                     <i class="fab fa-whatsapp"></i> Buy on WhatsApp
                 </button>
             </div>
@@ -44,25 +63,46 @@ function displayProducts(filterCategory = 'all') {
 }
 
 // Buy product via WhatsApp
-function buyProduct(productId, productName, productPrice) {
+function buyProduct(productSKU, productName, productPrice, productSize) {
     const phoneNumber = '917999095600'; // Your WhatsApp number (079990 95600)
-    const message = `Hi Rose Collection!
 
-I'm interested in buying:
+    let message = `नमस्ते Rose Collection! 🌹
 
-📦 Product: ${productName}
-💰 Price: ₹${productPrice}
-🆔 Product ID: #${productId}
+I'm interested in this product:
 
-Please provide more details about this product.`;
+📦 *Product:* ${productName}
+🔢 *Product No:* ${productSKU}`;
+
+    if (productSize) {
+        message += `\n📏 *Size:* ${productSize}`;
+    }
+
+    message += `\n💰 *Price:* ₹${productPrice}
+
+Please confirm availability and provide more details.
+
+Thank you! 🙏`;
 
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-    displayProducts();
+document.addEventListener('DOMContentLoaded', async () => {
+    // Wait for Firebase to initialize
+    if (useFirebase) {
+        console.log('🔥 Using Firebase for real-time data');
+
+        // Set up real-time listener for products
+        listenToProducts((products) => {
+            // Store in memory for filtering
+            window.currentProducts = products;
+            displayProductsFromData(products);
+        });
+    } else {
+        console.log('💾 Using localStorage (Firebase not configured)');
+        await displayProducts();
+    }
 
     // Mobile menu toggle
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -127,9 +167,69 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add('active');
             // Display filtered products
             const category = btn.getAttribute('data-category');
-            displayProducts(category);
+
+            if (useFirebase && window.currentProducts) {
+                displayProductsFromData(window.currentProducts, category);
+            } else {
+                displayProducts(category);
+            }
         });
     });
+
+    // Helper function to display products from data
+    window.displayProductsFromData = function(products, filterCategory = 'all') {
+        const productsGrid = document.getElementById('products-grid');
+        const noProducts = document.getElementById('no-products');
+
+        // Filter products
+        const filteredProducts = filterCategory === 'all'
+            ? products
+            : products.filter(p => p.category === filterCategory);
+
+        if (filteredProducts.length === 0) {
+            productsGrid.innerHTML = '';
+            noProducts.style.display = 'block';
+            return;
+        }
+
+        noProducts.style.display = 'none';
+        productsGrid.innerHTML = filteredProducts.map(product => `
+            <div class="product-card" data-category="${product.category}">
+                ${product.sku ? `<div class="product-badge">
+                    <i class="fas fa-barcode"></i> ${product.sku}
+                </div>` : ''}
+                <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
+                <div class="product-info">
+                    <span class="product-category">${product.category}</span>
+                    <h3 class="product-name">${product.name}</h3>
+                    ${product.size ? `<p class="product-size"><i class="fas fa-ruler"></i> Size: ${product.size}</p>` : ''}
+                    <p class="product-description">${product.description || 'Premium quality product'}</p>
+                    <div class="product-price">₹${parseFloat(product.price).toFixed(2)}</div>
+                    <div class="product-stock">
+                        ${product.stock > 0
+                            ? `<i class="fas fa-check-circle" style="color: green;"></i> In Stock (${product.stock})`
+                            : '<i class="fas fa-times-circle" style="color: red;"></i> Out of Stock'}
+                    </div>
+                    <button class="buy-btn" onclick="buyProduct('${product.sku || product.id}', '${product.name.replace(/'/g, "\\'")}', ${product.price}, '${product.size || ''}')" ${product.stock === 0 ? 'disabled' : ''}>
+                        <i class="fab fa-whatsapp"></i> Buy on WhatsApp
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        // Re-apply scroll animations
+        setTimeout(() => {
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                card.style.transition = 'all 0.6s ease-out';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 50);
+            });
+        }, 100);
+    };
 
     // Smooth scrolling for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {

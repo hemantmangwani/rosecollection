@@ -6,6 +6,11 @@
     <title>Admin Panel - Rose Collection</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -62,9 +67,16 @@
                         <input type="hidden" id="productId">
                         <div class="form-row">
                             <div class="form-group">
+                                <label>Product Number (SKU) *</label>
+                                <input type="text" id="productSKU" placeholder="RC-" required>
+                                <small>Unique product code (e.g., RC-001, RC-MEN-001)</small>
+                            </div>
+                            <div class="form-group">
                                 <label>Product Name *</label>
                                 <input type="text" id="productName" required>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group">
                                 <label>Category *</label>
                                 <select id="productCategory" required>
@@ -74,6 +86,11 @@
                                     <option value="kids">Kids</option>
                                     <option value="accessories">Accessories</option>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Size/Variant</label>
+                                <input type="text" id="productSize" placeholder="e.g., S, M, L, XL or 32, 34, 36">
+                                <small>Optional: Sizes or variants available</small>
                             </div>
                         </div>
                         <div class="form-row">
@@ -112,6 +129,7 @@
                         <thead>
                             <tr>
                                 <th>Image</th>
+                                <th>Product No.</th>
                                 <th>Name</th>
                                 <th>Category</th>
                                 <th>Price</th>
@@ -132,6 +150,9 @@
         </section>
     </div>
 
-    <script src="admin.js"></script>
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-products.js"></script>
+    <script src="admin-firebase.js"></script>
 </body>
 </html>

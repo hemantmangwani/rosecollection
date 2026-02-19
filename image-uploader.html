@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Uploader - Rose Collection</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <style>
+        .upload-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .upload-area {
+            border: 3px dashed #d4447e;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area:hover {
+            background: rgba(212, 68, 126, 0.05);
+            border-color: #ff6b9d;
+        }
+
+        .upload-area.dragover {
+            background: rgba(212, 68, 126, 0.1);
+            border-color: #ff6b9d;
+        }
+
+        .upload-area i {
+            font-size: 4rem;
+            color: #d4447e;
+            margin-bottom: 1rem;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .preview-item .url-container {
+            padding: 1rem;
+            background: #f8f9fa;
+        }
+
+        .preview-item input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .copy-btn {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: linear-gradient(135deg, #d4447e, #ff6b9d);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(212, 68, 126, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d4447e, #ff6b9d);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .instructions {
+            background: #f0f8ff;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #d4447e;
+        }
+
+        .instructions h3 {
+            color: #d4447e;
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions ul {
+            margin-left: 1.5rem;
+        }
+
+        .instructions li {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-rose"></i>
+                <h1>Rose Collection - Image Uploader</h1>
+            </div>
+            <nav class="nav">
+                <a href="admin.html"><i class="fas fa-arrow-left"></i> Back to Admin</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="upload-container">
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> How to Use:</h3>
+            <ul>
+                <li>✅ Click or drag & drop your product images here</li>
+                <li>✅ Images will be uploaded to Firebase Storage</li>
+                <li>✅ Copy the URL and paste it in the "Image URL" field when adding products</li>
+                <li>✅ Supports: JPG, PNG, WebP (Max 5MB per image)</li>
+            </ul>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <h2>Click or Drag Images Here</h2>
+            <p>Upload product images to Firebase Storage</p>
+            <input type="file" id="fileInput" accept="image/*" multiple>
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <!-- Uploaded images will appear here -->
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script>
+        // Initialize Firebase Storage
+        let storage = null;
+
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            storage = firebase.storage();
+            console.log('✅ Firebase Storage initialized');
+        } else {
+            alert('❌ Firebase not configured! Please check firebase-config.js');
+        }
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag & drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        // Handle file uploads
+        async function handleFiles(files) {
+            if (!storage) {
+                alert('Firebase Storage not initialized!');
+                return;
+            }
+
+            for (let file of files) {
+                if (!file.type.startsWith('image/')) {
+                    alert(`${file.name} is not an image file!`);
+                    continue;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`${file.name} is too large! Max 5MB`);
+                    continue;
+                }
+
+                await uploadImage(file);
+            }
+        }
+
+        // Upload image to Firebase Storage
+        async function uploadImage(file) {
+            const timestamp = Date.now();
+            const fileName = `products/${timestamp}_${file.name}`;
+            const storageRef = storage.ref(fileName);
+
+            // Create preview element
+            const previewItem = document.createElement('div');
+            previewItem.className = 'preview-item';
+            previewItem.innerHTML = `
+                <img src="${URL.createObjectURL(file)}" alt="Preview">
+                <div class="url-container">
+                    <small>Uploading...</small>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-${timestamp}"></div>
+                    </div>
+                </div>
+            `;
+            previewContainer.insertBefore(previewItem, previewContainer.firstChild);
+
+            // Upload file
+            const uploadTask = storageRef.put(file);
+
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    // Progress
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    const progressBar = document.getElementById(`progress-${timestamp}`);
+                    if (progressBar) {
+                        progressBar.style.width = progress + '%';
+                    }
+                },
+                (error) => {
+                    // Error
+                    console.error('Upload error:', error);
+                    alert('Upload failed: ' + error.message);
+                    previewItem.remove();
+                },
+                async () => {
+                    // Success
+                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+
+                    previewItem.innerHTML = `
+                        <img src="${downloadURL}" alt="Uploaded">
+                        <div class="url-container">
+                            <input type="text" value="${downloadURL}" readonly onclick="this.select()">
+                            <button class="copy-btn" onclick="copyURL('${downloadURL}', this)">
+                                <i class="fas fa-copy"></i> Copy URL
+                            </button>
+                        </div>
+                    `;
+                }
+            );
+        }
+
+        // Copy URL to clipboard
+        function copyURL(url, button) {
+            navigator.clipboard.writeText(url).then(() => {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.style.background = '#28a745';
+
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = '';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
