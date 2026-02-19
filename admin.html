@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -104,9 +105,48 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Image URL *</label>
-                            <input type="url" id="productImage" placeholder="https://example.com/image.jpg" required>
-                            <small>Enter a valid image URL</small>
+                            <label>Product Image *</label>
+                            <div class="image-upload-section">
+                                <div class="upload-method-tabs">
+                                    <button type="button" class="upload-tab active" data-method="upload" onclick="switchUploadMethod('upload')">
+                                        <i class="fas fa-upload"></i> Upload Image
+                                    </button>
+                                    <button type="button" class="upload-tab" data-method="url" onclick="switchUploadMethod('url')">
+                                        <i class="fas fa-link"></i> Use URL
+                                    </button>
+                                </div>
+
+                                <!-- Upload Method -->
+                                <div id="uploadMethod" class="upload-method active">
+                                    <div class="image-drop-zone" id="imageDropZone">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <p>Click or Drag & Drop Image Here</p>
+                                        <small>Uploads to ImgBB (Free) • JPG, PNG, WebP (Max 10MB)</small>
+                                        <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+                                    </div>
+                                    <div id="uploadProgress" class="upload-progress" style="display: none;">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="progressFill"></div>
+                                        </div>
+                                        <small id="progressText">Uploading...</small>
+                                    </div>
+                                    <div id="imagePreview" class="image-preview" style="display: none;">
+                                        <img id="previewImg" src="" alt="Preview">
+                                        <button type="button" class="remove-image-btn" onclick="removeImage()">
+                                            <i class="fas fa-times"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- URL Method -->
+                                <div id="urlMethod" class="upload-method">
+                                    <input type="url" id="productImageURL" placeholder="https://example.com/image.jpg">
+                                    <small>Enter a valid image URL</small>
+                                </div>
+
+                                <!-- Hidden field for actual image URL -->
+                                <input type="hidden" id="productImage" required>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Description</label>
