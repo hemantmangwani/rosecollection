@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rose Collection - Premium Clothing</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <img src="logo.png" alt="Rose Collection" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="logo-fallback" style="display: none;">
+                    <i class="fas fa-rose"></i>
+                    <h1>Rose Collection</h1>
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="index.html" class="active">Home</a>
+                <a href="#products">Products</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+                <a href="admin.html" class="admin-link"><i class="fas fa-lock"></i> Admin</a>
+            </nav>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="mobile-nav" id="mobileNav">
+            <a href="index.html" class="active">Home</a>
+            <a href="#products">Products</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+            <a href="admin.html" class="admin-link"><i class="fas fa-lock"></i> Admin</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h2 class="animate-fade-in">Welcome to Rose Collection</h2>
+            <p class="animate-fade-in-delay">Discover Premium Clothing & Fashion in Khandwa</p>
+            <div class="hero-buttons">
+                <a href="#products" class="btn-primary btn-animated">Shop Now</a>
+                <a href="#contact" class="btn-secondary btn-animated">Visit Store</a>
+            </div>
+        </div>
+        <div class="hero-features">
+            <div class="hero-feature">
+                <i class="fas fa-shipping-fast"></i>
+                <span>Fast Delivery</span>
+            </div>
+            <div class="hero-feature">
+                <i class="fas fa-certificate"></i>
+                <span>Quality Assured</span>
+            </div>
+            <div class="hero-feature">
+                <i class="fas fa-tag"></i>
+                <span>Best Prices</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="products-section">
+        <div class="container">
+            <h2 class="section-title">Our Collection</h2>
+            <div class="filter-container">
+                <button class="filter-btn active" data-category="all">All</button>
+                <button class="filter-btn" data-category="men">Men</button>
+                <button class="filter-btn" data-category="women">Women</button>
+                <button class="filter-btn" data-category="kids">Kids</button>
+                <button class="filter-btn" data-category="accessories">Accessories</button>
+            </div>
+            <div id="products-grid" class="products-grid">
+                <!-- Products will be loaded here dynamically -->
+            </div>
+            <div id="no-products" class="no-products" style="display: none;">
+                <i class="fas fa-box-open"></i>
+                <p>No products available at the moment.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2 class="section-title">About Rose Collection</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>Rose Collection is your premier destination for quality clothing and fashion. We curate the finest pieces to elevate your wardrobe with style and elegance.</p>
+                    <p>Our commitment is to provide you with exceptional products at competitive prices, ensuring you look your best every day.</p>
+                </div>
+                <div class="about-features">
+                    <div class="feature">
+                        <i class="fas fa-shipping-fast"></i>
+                        <h3>Fast Delivery</h3>
+                        <p>Quick and reliable shipping</p>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-certificate"></i>
+                        <h3>Quality Assured</h3>
+                        <p>Premium quality products</p>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-headset"></i>
+                        <h3>24/7 Support</h3>
+                        <p>Always here to help</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 class="section-title">Visit Our Store</h2>
+            <div class="contact-wrapper">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h3>Address</h3>
+                            <p>Naman Tower, Ghanta Ghar Chowk<br>Near Ghanta Ghar, Ghaspura<br>Khandwa, Madhya Pradesh 450001</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h3>Phone</h3>
+                            <p><a href="tel:+917999095600">079990 95600</a></p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <h3>Store Hours</h3>
+                            <p>Mon - Sat: 10:00 AM - 9:00 PM<br>Sunday: 10:00 AM - 8:00 PM</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="map-container">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3665.8193!2d76.3513!3d21.8267!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDQ5JzM2LjEiTiA3NsKwMjEnMDQuNyJF!5e0!3m2!1sen!2sin!4v1234567890" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Rose Collection</h3>
+                    <p>Your trusted destination for premium clothing in Khandwa.</p>
+                    <div class="social-links">
+                        <a href="#" title="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#products">Products</a></li>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li><a href="admin.html">Admin Panel</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <p><i class="fas fa-phone"></i> 079990 95600</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Ghanta Ghar, Khandwa</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Rose Collection. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-top" id="scrollTop">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Floating WhatsApp Button -->
+    <a href="https://wa.me/917999095600?text=Hi%20Rose%20Collection!%20I%20have%20a%20query."
+       class="whatsapp-float"
+       target="_blank"
+       title="Chat on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <script src="script.js"></script>
+</body>
+</html>
