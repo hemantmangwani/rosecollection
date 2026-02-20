@@ -17,13 +17,13 @@
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <div class="logo">
-                <img src="logo.png" alt="Rose Collection" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="logo-fallback" style="display: none;">
+            <a href="index.html" class="logo-link">
+                <div class="logo">
                     <i class="fas fa-rose"></i>
-                    <h1>Rose Collection - Admin</h1>
+                    <h1>Rose Collection</h1>
+                    <span class="admin-badge">Admin</span>
                 </div>
-            </div>
+            </a>
             <nav class="nav">
                 <a href="index.html"><i class="fas fa-store"></i> Back to Shop</a>
                 <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -54,12 +54,23 @@
     <div id="adminDashboard" style="display: none;">
         <section class="admin-section">
             <div class="container">
-                <div class="admin-header">
-                    <h2>Manage Products</h2>
-                    <button class="btn-primary" id="addProductBtn">
-                        <i class="fas fa-plus"></i> Add New Product
+                <div class="admin-tabs">
+                    <button class="admin-tab active" data-tab="products">
+                        <i class="fas fa-box"></i> Products
+                    </button>
+                    <button class="admin-tab" data-tab="categories">
+                        <i class="fas fa-tags"></i> Categories
                     </button>
                 </div>
+
+                <!-- Products Tab -->
+                <div id="productsTab" class="admin-tab-content active">
+                    <div class="admin-header">
+                        <h2>Manage Products</h2>
+                        <button class="btn-primary" id="addProductBtn">
+                            <i class="fas fa-plus"></i> Add New Product
+                        </button>
+                    </div>
 
                 <!-- Product Form -->
                 <div id="productForm" class="product-form" style="display: none;">
@@ -83,9 +94,15 @@
                                 <select id="productCategory" required>
                                     <option value="">Select Category</option>
                                     <option value="men">Men</option>
-                                    <option value="women">Women</option>
-                                    <option value="kids">Kids</option>
-                                    <option value="accessories">Accessories</option>
+                                    <option value="jeans">Jeans</option>
+                                    <option value="shirt">Shirt</option>
+                                    <option value="tshirt">T-Shirt</option>
+                                    <option value="lower">Lower</option>
+                                    <option value="hoodies">Hoodies</option>
+                                    <option value="sweaters">Sweaters</option>
+                                    <option value="summer-wear">Summer Wear</option>
+                                    <option value="winter-wear">Winter Wear</option>
+                                    <option value="others">Others</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -186,6 +203,42 @@
                         <p>No products added yet. Click "Add New Product" to get started.</p>
                     </div>
                 </div>
+                </div>
+
+                <!-- Categories Tab -->
+                <div id="categoriesTab" class="admin-tab-content">
+                    <div class="admin-header">
+                        <h2>Manage Categories</h2>
+                        <button class="btn-primary" id="addCategoryBtn">
+                            <i class="fas fa-plus"></i> Add New Category
+                        </button>
+                    </div>
+
+                    <!-- Add Category Form -->
+                    <div id="categoryForm" class="product-form" style="display: none;">
+                        <h3>Add New Category</h3>
+                        <form id="categoryFormElement">
+                            <div class="form-group">
+                                <label>Category Name *</label>
+                                <input type="text" id="categoryName" placeholder="e.g., Jeans, Shirt, etc." required>
+                                <small>This will appear in the filter buttons</small>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-save"></i> Add Category
+                                </button>
+                                <button type="button" class="btn-secondary" id="cancelCategoryBtn">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Categories List -->
+                    <div class="categories-grid" id="categoriesGrid">
+                        <!-- Categories will be loaded here -->
+                    </div>
+                </div>
             </div>
         </section>
     </div>
@@ -193,6 +246,7 @@
     <!-- Firebase Configuration -->
     <script src="firebase-config.js"></script>
     <script src="firebase-products.js"></script>
+    <script src="categories.js"></script>
     <script src="admin-firebase.js"></script>
 </body>
 </html>

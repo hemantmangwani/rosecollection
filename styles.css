@@ -50,32 +50,63 @@ body {
     align-items: center;
 }
 
+.logo-link {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+}
+
+.logo-link:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
 .logo {
     display: flex;
     align-items: center;
-    gap: 10px;
-}
-
-.logo-img {
-    height: 50px;
-    width: auto;
-    max-width: 200px;
-    object-fit: contain;
-    filter: brightness(0) invert(1);
-}
-
-.logo-fallback {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    gap: 12px;
+    position: relative;
 }
 
 .logo i {
-    font-size: 2rem;
+    font-size: 2.5rem;
+    color: var(--white);
+    animation: rotate 3s ease-in-out infinite;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+}
+
+@keyframes rotate {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-5deg);
+    }
+    75% {
+        transform: rotate(5deg);
+    }
 }
 
 .logo h1 {
     font-size: 1.8rem;
+    color: var(--white);
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    letter-spacing: 1px;
+}
+
+.admin-badge {
+    position: absolute;
+    top: -8px;
+    right: -40px;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
 }
 
 .mobile-menu-btn {
@@ -97,6 +128,7 @@ body {
     left: 0;
     right: 0;
     padding: 1rem 0;
+    z-index: 1000;
 }
 
 .mobile-nav.active {
@@ -106,6 +138,24 @@ body {
 .mobile-nav a {
     padding: 1rem 2rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--white) !important;
+    text-decoration: none !important;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: all 0.3s;
+}
+
+.mobile-nav a:visited,
+.mobile-nav a:link,
+.mobile-nav a:active {
+    color: var(--white) !important;
+    text-decoration: none !important;
+}
+
+.mobile-nav a:hover,
+.mobile-nav a.active {
+    background: rgba(212, 68, 126, 0.3);
+    color: var(--white) !important;
 }
 
 .nav {
@@ -302,9 +352,12 @@ body {
 .filter-container {
     display: flex;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.8rem;
     margin-bottom: 3rem;
     flex-wrap: wrap;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .filter-btn {
@@ -316,12 +369,16 @@ body {
     cursor: pointer;
     font-weight: 600;
     transition: all 0.3s;
+    font-size: 0.95rem;
+    white-space: nowrap;
 }
 
 .filter-btn:hover,
 .filter-btn.active {
     background: var(--primary-color);
     color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(212, 68, 126, 0.3);
 }
 
 .products-grid {
@@ -751,6 +808,115 @@ body {
     }
 }
 
+/* Admin Tabs */
+.admin-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--light-color);
+}
+
+.admin-tab {
+    padding: 1rem 2rem;
+    background: transparent;
+    border: none;
+    color: #666;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-tab:hover {
+    color: var(--primary-color);
+}
+
+.admin-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.admin-tab-content {
+    display: none;
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
+/* Categories Grid */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.category-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.category-card h3 {
+    color: var(--dark-color);
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    text-transform: capitalize;
+}
+
+.category-card .category-count {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.category-card .delete-category-btn {
+    padding: 0.5rem 1rem;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+.category-card .delete-category-btn:hover {
+    background: #c0392b;
+    transform: scale(1.05);
+}
+
+.category-card.default-category .delete-category-btn {
+    display: none;
+}
+
+.category-card.default-category::after {
+    content: 'Default';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
 /* Admin Styles */
 .modal {
     display: flex;
@@ -1142,6 +1308,10 @@ table img {
         display: block;
     }
 
+    .mobile-nav.active {
+        display: flex;
+    }
+
     .hero {
         padding: 6rem 0 4rem;
         background-attachment: scroll;
@@ -1204,7 +1374,54 @@ table img {
     }
 }
 
+@media (max-width: 768px) {
+    .filter-container {
+        gap: 0.5rem;
+        padding: 0 10px;
+    }
+
+    .filter-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+}
+
 @media (max-width: 480px) {
+    .header .container {
+        padding: 0 10px;
+    }
+
+    .logo h1 {
+        font-size: 1.3rem;
+    }
+
+    .logo i {
+        font-size: 1.8rem;
+    }
+
+    .nav {
+        gap: 0.3rem;
+        padding: 0.5rem;
+    }
+
+    .nav a {
+        padding: 0.5rem 0.7rem;
+        font-size: 0.85rem;
+    }
+
+    .admin-link i {
+        display: none;
+    }
+
+    .filter-container {
+        gap: 0.4rem;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
     .hero-content h2 {
         font-size: 2rem;
     }
@@ -1225,5 +1442,10 @@ table img {
     .btn-secondary {
         padding: 0.8rem 2rem;
         font-size: 1rem;
+    }
+
+    .admin-badge {
+        position: static;
+        margin-left: 0.5rem;
     }
 }

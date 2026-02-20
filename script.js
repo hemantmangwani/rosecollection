@@ -87,8 +87,52 @@ Thank you! 🙏`;
     window.open(whatsappUrl, '_blank');
 }
 
+// Load filter buttons dynamically
+async function loadFilterButtons() {
+    const categories = await getCategories();
+    const filterContainer = document.querySelector('.filter-container');
+
+    if (!filterContainer) return;
+
+    const buttons = categories.map(cat => {
+        const displayName = cat === 'all' ? 'All' : cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const activeClass = cat === 'all' ? 'active' : '';
+
+        return `<button class="filter-btn ${activeClass}" data-category="${cat}">${displayName}</button>`;
+    });
+
+    filterContainer.innerHTML = buttons.join('');
+
+    // Re-attach filter functionality
+    attachFilterListeners();
+}
+
+// Attach filter button listeners
+function attachFilterListeners() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active class from all buttons
+            filterButtons.forEach(b => b.classList.remove('active'));
+            // Add active class to clicked button
+            btn.classList.add('active');
+            // Display filtered products
+            const category = btn.getAttribute('data-category');
+
+            if (useFirebase && window.currentProducts) {
+                displayProductsFromData(window.currentProducts, category);
+            } else {
+                displayProducts(category);
+            }
+        });
+    });
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
+    // Load filter buttons first
+    await loadFilterButtons();
+
     // Wait for Firebase to initialize
     if (useFirebase) {
         console.log('🔥 Using Firebase for real-time data');
@@ -157,24 +201,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }, 100);
 
-    // Filter functionality
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Remove active class from all buttons
-            filterButtons.forEach(b => b.classList.remove('active'));
-            // Add active class to clicked button
-            btn.classList.add('active');
-            // Display filtered products
-            const category = btn.getAttribute('data-category');
-
-            if (useFirebase && window.currentProducts) {
-                displayProductsFromData(window.currentProducts, category);
-            } else {
-                displayProducts(category);
-            }
-        });
-    });
 
     // Helper function to display products from data
     window.displayProductsFromData = function(products, filterCategory = 'all') {

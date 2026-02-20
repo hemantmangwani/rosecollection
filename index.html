@@ -16,13 +16,12 @@
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <div class="logo">
-                <img src="logo.png" alt="Rose Collection" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="logo-fallback" style="display: none;">
+            <a href="index.html" class="logo-link">
+                <div class="logo">
                     <i class="fas fa-rose"></i>
                     <h1>Rose Collection</h1>
                 </div>
-            </div>
+            </a>
             <nav class="nav">
                 <a href="index.html" class="active">Home</a>
                 <a href="#products">Products</a>
@@ -77,9 +76,15 @@
             <div class="filter-container">
                 <button class="filter-btn active" data-category="all">All</button>
                 <button class="filter-btn" data-category="men">Men</button>
-                <button class="filter-btn" data-category="women">Women</button>
-                <button class="filter-btn" data-category="kids">Kids</button>
-                <button class="filter-btn" data-category="accessories">Accessories</button>
+                <button class="filter-btn" data-category="jeans">Jeans</button>
+                <button class="filter-btn" data-category="shirt">Shirt</button>
+                <button class="filter-btn" data-category="tshirt">T-Shirt</button>
+                <button class="filter-btn" data-category="lower">Lower</button>
+                <button class="filter-btn" data-category="hoodies">Hoodies</button>
+                <button class="filter-btn" data-category="sweaters">Sweaters</button>
+                <button class="filter-btn" data-category="summer-wear">Summer Wear</button>
+                <button class="filter-btn" data-category="winter-wear">Winter Wear</button>
+                <button class="filter-btn" data-category="others">Others</button>
             </div>
             <div id="products-grid" class="products-grid">
                 <!-- Products will be loaded here dynamically -->
@@ -206,6 +211,7 @@
     <!-- Firebase Configuration -->
     <script src="firebase-config.js"></script>
     <script src="firebase-products.js"></script>
+    <script src="categories.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

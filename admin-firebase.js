@@ -523,4 +523,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     checkAuth();
     setupImageUpload();
+    initCategoryManagement();
 });
