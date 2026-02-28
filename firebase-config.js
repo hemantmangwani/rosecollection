@@ -14,6 +14,7 @@ const firebaseConfig = {
 // Initialize Firebase (this will be used by other scripts)
 let db = null;
 let auth = null;
+let useFirebase = false;
 
 try {
   // Initialize Firebase
@@ -25,8 +26,10 @@ try {
   // Initialize Auth
   auth = firebase.auth();
 
+  useFirebase = true;
   console.log('✅ Firebase initialized successfully!');
 } catch (error) {
   console.error('❌ Firebase initialization error:', error);
-  alert('Firebase configuration error. Please check firebase-config.js');
+  useFirebase = false;
+  console.warn('⚠️ Falling back to localStorage mode');
 }

@@ -61,6 +61,9 @@
                     <button class="admin-tab" data-tab="categories">
                         <i class="fas fa-tags"></i> Categories
                     </button>
+                    <button class="admin-tab" data-tab="orders">
+                        <i class="fas fa-shopping-bag"></i> Orders
+                    </button>
                 </div>
 
                 <!-- Products Tab -->
@@ -122,14 +125,14 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Product Image *</label>
+                            <label>Product Images * <small>(Upload multiple images - first will be primary)</small></label>
                             <div class="image-upload-section">
                                 <div class="upload-method-tabs">
                                     <button type="button" class="upload-tab active" data-method="upload" onclick="switchUploadMethod('upload')">
-                                        <i class="fas fa-upload"></i> Upload Image
+                                        <i class="fas fa-upload"></i> Upload Images
                                     </button>
                                     <button type="button" class="upload-tab" data-method="url" onclick="switchUploadMethod('url')">
-                                        <i class="fas fa-link"></i> Use URL
+                                        <i class="fas fa-link"></i> Use URLs
                                     </button>
                                 </div>
 
@@ -137,9 +140,9 @@
                                 <div id="uploadMethod" class="upload-method active">
                                     <div class="image-drop-zone" id="imageDropZone">
                                         <i class="fas fa-cloud-upload-alt"></i>
-                                        <p>Click or Drag & Drop Image Here</p>
-                                        <small>Uploads to ImgBB (Free) • JPG, PNG, WebP (Max 10MB)</small>
-                                        <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+                                        <p>Click or Drag & Drop Images Here</p>
+                                        <small>Upload multiple images • JPG, PNG, WebP (Max 10MB each)</small>
+                                        <input type="file" id="imageFileInput" accept="image/*" multiple style="display: none;">
                                     </div>
                                     <div id="uploadProgress" class="upload-progress" style="display: none;">
                                         <div class="progress-bar">
@@ -147,24 +150,56 @@
                                         </div>
                                         <small id="progressText">Uploading...</small>
                                     </div>
-                                    <div id="imagePreview" class="image-preview" style="display: none;">
-                                        <img id="previewImg" src="" alt="Preview">
-                                        <button type="button" class="remove-image-btn" onclick="removeImage()">
-                                            <i class="fas fa-times"></i> Remove
-                                        </button>
-                                    </div>
+                                    <div id="imagesPreviewContainer" class="images-preview-container"></div>
                                 </div>
 
                                 <!-- URL Method -->
                                 <div id="urlMethod" class="upload-method">
-                                    <input type="url" id="productImageURL" placeholder="https://example.com/image.jpg">
-                                    <small>Enter a valid image URL</small>
+                                    <textarea id="productImageURLs" rows="3" placeholder="Enter image URLs (one per line)&#10;https://example.com/image1.jpg&#10;https://example.com/image2.jpg" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #e0e0e0;"></textarea>
+                                    <small>Enter one URL per line</small>
+                                    <button type="button" class="btn-add-urls" onclick="addImageURLs()">
+                                        <i class="fas fa-plus"></i> Add URLs
+                                    </button>
+                                    <div id="urlImagesPreviewContainer" class="images-preview-container"></div>
                                 </div>
 
-                                <!-- Hidden field for actual image URL -->
-                                <input type="hidden" id="productImage" required>
+                                <!-- Hidden field for actual image URLs (JSON array) -->
+                                <input type="hidden" id="productImages">
                             </div>
                         </div>
+
+                        <!-- Color Variants Section -->
+                        <div class="form-group full-width">
+                            <label>
+                                <i class="fas fa-palette"></i> Color Variants
+                                <small>(Optional - Add colors with specific images and stock for each)</small>
+                            </label>
+                            <div class="color-variants-section">
+                                <div class="variants-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="enableColorVariants" onchange="toggleColorVariants()">
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">Enable Color Variants</span>
+                                    </label>
+                                </div>
+
+                                <div id="colorVariantsContainer" style="display: none;">
+                                    <div class="color-variants-info">
+                                        <p><i class="fas fa-info-circle"></i> Add different colors for this product. Each color can have its own images and stock quantity.</p>
+                                    </div>
+
+                                    <div id="colorVariantsList"></div>
+
+                                    <button type="button" class="btn-add-variant" onclick="addColorVariant()">
+                                        <i class="fas fa-plus-circle"></i> Add Color Variant
+                                    </button>
+
+                                    <!-- Hidden field for color variants data -->
+                                    <input type="hidden" id="productColorVariants">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label>Description</label>
                             <textarea id="productDescription" rows="4"></textarea>
@@ -239,14 +274,52 @@
                         <!-- Categories will be loaded here -->
                     </div>
                 </div>
+
+                <!-- Orders Tab -->
+                <div id="ordersTab" class="admin-tab-content">
+                    <div class="admin-header">
+                        <h2>Customer Orders</h2>
+                        <div class="order-filters">
+                            <button class="filter-btn active" data-status="all">All Orders</button>
+                            <button class="filter-btn" data-status="pending">Pending</button>
+                            <button class="filter-btn" data-status="accepted">Accepted</button>
+                            <button class="filter-btn" data-status="processing">Processing</button>
+                            <button class="filter-btn" data-status="out-for-delivery">Out for Delivery</button>
+                            <button class="filter-btn" data-status="delivered">Delivered</button>
+                            <button class="filter-btn" data-status="cancelled">Cancelled</button>
+                        </div>
+                    </div>
+
+                    <!-- Orders List -->
+                    <div class="orders-list" id="ordersList">
+                        <!-- Orders will be loaded here -->
+                    </div>
+
+                    <div id="noOrdersAdmin" class="no-products" style="display: none;">
+                        <i class="fas fa-shopping-bag"></i>
+                        <p>No orders yet. Orders will appear here once customers place them.</p>
+                    </div>
+                </div>
             </div>
         </section>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="orderDetailModal" class="modal" style="display: none;">
+        <div class="modal-content order-detail-modal">
+            <span class="close-modal" onclick="closeOrderDetailModal()">&times;</span>
+            <div id="orderDetailContent">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
     </div>
 
     <!-- Firebase Configuration -->
     <script src="firebase-config.js"></script>
     <script src="firebase-products.js"></script>
     <script src="categories.js"></script>
+    <script src="orders.js"></script>
     <script src="admin-firebase.js"></script>
+    <script src="admin-orders.js"></script>
 </body>
 </html>

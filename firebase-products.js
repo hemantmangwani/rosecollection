@@ -63,11 +63,22 @@ function listenToProducts(callback) {
     return db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
         const products = [];
         snapshot.forEach(doc => {
-            products.push({
+            const productData = {
                 id: doc.id,
                 ...doc.data()
-            });
+            };
+            products.push(productData);
+
+            // Debug: Log color variants
+            if (productData.hasColorVariants && productData.colorVariants) {
+                console.log('📦 Product loaded with color variants:', productData.name, {
+                    hasColorVariants: productData.hasColorVariants,
+                    variantCount: productData.colorVariants.length,
+                    colors: productData.colorVariants.map(v => v.colorName)
+                });
+            }
         });
+        console.log('✅ Total products loaded from Firebase:', products.length);
         callback(products);
     }, error => {
         console.error('Error listening to products:', error);

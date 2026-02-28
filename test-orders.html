@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Orders - Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .section {
+            background: #f5f5f5;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+        .section h3 {
+            margin-top: 0;
+        }
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        button:hover {
+            background: #d63851;
+        }
+        pre {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        .status {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <h1>🔍 Order System Debug Tool</h1>
+
+    <div class="section">
+        <h3>1. Check Current User</h3>
+        <button onclick="checkCurrentUser()">Check User Status</button>
+        <div id="userStatus"></div>
+    </div>
+
+    <div class="section">
+        <h3>2. Check All Orders</h3>
+        <button onclick="checkAllOrders()">Get All Orders</button>
+        <div id="allOrdersStatus"></div>
+    </div>
+
+    <div class="section">
+        <h3>3. Check User Orders</h3>
+        <button onclick="checkUserOrders()">Get My Orders</button>
+        <div id="userOrdersStatus"></div>
+    </div>
+
+    <div class="section">
+        <h3>4. Check LocalStorage</h3>
+        <button onclick="checkLocalStorage()">Check LocalStorage</button>
+        <div id="localStorageStatus"></div>
+    </div>
+
+    <div class="section">
+        <h3>5. Test Create Order</h3>
+        <button onclick="createTestOrder()">Create Test Order</button>
+        <div id="createOrderStatus"></div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    <script src="orders.js"></script>
+    <script src="auth.js"></script>
+
+    <script>
+        // Wait for everything to load
+        setTimeout(() => {
+            console.log('Firebase initialized:', useFirebase);
+            console.log('DB:', db);
+            console.log('Auth:', auth);
+            console.log('Current User:', currentUser);
+        }, 1000);
+
+        function checkCurrentUser() {
+            const div = document.getElementById('userStatus');
+
+            if (currentUser) {
+                div.innerHTML = `
+                    <div class="status success">
+                        <strong>✅ User Logged In</strong><br>
+                        Email: ${currentUser.email || currentUser.emailAddress || 'N/A'}<br>
+                        Name: ${currentUser.displayName || 'N/A'}<br>
+                        UID: ${currentUser.uid || 'N/A'}
+                    </div>
+                    <pre>${JSON.stringify(currentUser, null, 2)}</pre>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div class="status error">
+                        ❌ No user logged in. Please login first from the main page.
+                    </div>
+                `;
+            }
+        }
+
+        async function checkAllOrders() {
+            const div = document.getElementById('allOrdersStatus');
+            div.innerHTML = '<div class="status info">⏳ Loading all orders...</div>';
+
+            try {
+                const orders = await getAllOrders();
+                div.innerHTML = `
+                    <div class="status success">
+                        <strong>✅ Found ${orders.length} total orders</strong>
+                    </div>
+                    <pre>${JSON.stringify(orders, null, 2)}</pre>
+                `;
+            } catch (error) {
+                div.innerHTML = `
+                    <div class="status error">
+                        ❌ Error: ${error.message}
+                    </div>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        async function checkUserOrders() {
+            const div = document.getElementById('userOrdersStatus');
+
+            if (!currentUser) {
+                div.innerHTML = '<div class="status error">❌ Please login first</div>';
+                return;
+            }
+
+            div.innerHTML = '<div class="status info">⏳ Loading your orders...</div>';
+
+            try {
+                const userEmail = currentUser.email || currentUser.emailAddress;
+                const orders = await getUserOrders(userEmail);
+
+                div.innerHTML = `
+                    <div class="status success">
+                        <strong>✅ Found ${orders.length} orders for ${userEmail}</strong>
+                    </div>
+                    <pre>${JSON.stringify(orders, null, 2)}</pre>
+                `;
+            } catch (error) {
+                div.innerHTML = `
+                    <div class="status error">
+                        ❌ Error: ${error.message}
+                    </div>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        function checkLocalStorage() {
+            const div = document.getElementById('localStorageStatus');
+
+            const orders = localStorage.getItem('roseCollectionOrders');
+
+            if (orders) {
+                const parsed = JSON.parse(orders);
+                div.innerHTML = `
+                    <div class="status success">
+                        <strong>✅ Found ${parsed.length} orders in LocalStorage</strong>
+                    </div>
+                    <pre>${JSON.stringify(parsed, null, 2)}</pre>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div class="status info">
+                        ℹ️ No orders in LocalStorage
+                    </div>
+                `;
+            }
+        }
+
+        async function createTestOrder() {
+            const div = document.getElementById('createOrderStatus');
+
+            if (!currentUser) {
+                div.innerHTML = '<div class="status error">❌ Please login first</div>';
+                return;
+            }
+
+            div.innerHTML = '<div class="status info">⏳ Creating test order...</div>';
+
+            try {
+                const testOrder = {
+                    userId: currentUser.uid || null,
+                    customerName: currentUser.displayName || 'Test User',
+                    customerEmail: currentUser.email || currentUser.emailAddress,
+                    customerPhone: '9876543210',
+                    customerAddress: 'Test Address, Khandwa, MP 450001',
+                    items: [
+                        {
+                            id: 'test-1',
+                            name: 'Test Product',
+                            sku: 'TEST-001',
+                            price: 999,
+                            quantity: 1,
+                            image: 'https://via.placeholder.com/100'
+                        }
+                    ],
+                    totalAmount: 999
+                };
+
+                const result = await saveOrder(testOrder);
+
+                if (result.success) {
+                    div.innerHTML = `
+                        <div class="status success">
+                            <strong>✅ Test order created!</strong><br>
+                            Order ID: ${result.orderId}
+                        </div>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <div class="status error">
+                            ❌ Failed to create order: ${result.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                div.innerHTML = `
+                    <div class="status error">
+                        ❌ Error: ${error.message}
+                    </div>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        // Auto-check on load
+        setTimeout(() => {
+            checkCurrentUser();
+        }, 1500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Rose Collection</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <a href="index.html" class="logo-link">
+                <div class="logo">
+                    <i class="fas fa-rose"></i>
+                    <h1>Rose Collection</h1>
+                </div>
+            </a>
+            <nav class="nav">
+                <a href="index.html">Home</a>
+                <a href="index.html#products">Products</a>
+                <a href="my-orders.html" class="active">My Orders</a>
+                <a href="index.html#contact">Contact</a>
+            </nav>
+            <div class="header-actions">
+                <button class="header-btn" id="userBtn">
+                    <i class="fas fa-user"></i>
+                    <span>Login</span>
+                </button>
+                <div class="user-dropdown" id="userDropdown" style="display: none;">
+                    <a href="my-orders.html"><i class="fas fa-shopping-bag"></i> My Orders</a>
+                    <a href="#" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+                <button class="header-btn cart-btn" id="cartBtn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cartCount">0</span>
+                </button>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="mobile-nav" id="mobileNav">
+            <a href="index.html">Home</a>
+            <a href="index.html#products">Products</a>
+            <a href="my-orders.html" class="active">My Orders</a>
+            <a href="index.html#contact">Contact</a>
+        </div>
+    </header>
+
+    <!-- My Orders Section -->
+    <section class="my-orders-section">
+        <div class="container">
+            <h2 class="section-title">
+                <i class="fas fa-shopping-bag"></i> My Orders
+            </h2>
+
+            <!-- Login Required Message -->
+            <div id="loginRequired" class="login-required" style="display: none;">
+                <i class="fas fa-lock"></i>
+                <h3>Please Login to View Orders</h3>
+                <p>You need to be logged in to view your order history.</p>
+                <button class="btn-primary" onclick="showLoginModal()">
+                    <i class="fas fa-sign-in-alt"></i> Login Now
+                </button>
+            </div>
+
+            <!-- Orders Container -->
+            <div id="userOrdersContainer">
+                <!-- Loading State -->
+                <div id="ordersLoading" class="orders-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading your orders...</p>
+                </div>
+
+                <!-- No Orders -->
+                <div id="noOrders" class="no-orders" style="display: none;">
+                    <i class="fas fa-box-open"></i>
+                    <h3>No Orders Yet</h3>
+                    <p>You haven't placed any orders yet.</p>
+                    <a href="index.html#products" class="btn-primary">
+                        <i class="fas fa-shopping-cart"></i> Start Shopping
+                    </a>
+                </div>
+
+                <!-- Orders List -->
+                <div id="userOrdersList" class="user-orders-list">
+                    <!-- Orders will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Order Detail Modal -->
+    <div id="userOrderDetailModal" class="modal" style="display: none;">
+        <div class="modal-content order-detail-modal">
+            <span class="close-modal" onclick="closeUserOrderDetailModal()">&times;</span>
+            <div id="userOrderDetailContent">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Login/Signup) -->
+    <div id="authModal" class="modal" style="display: none;">
+        <div class="modal-content auth-modal">
+            <span class="close-modal" onclick="closeAuthModal()">&times;</span>
+
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form">
+                <h2><i class="fas fa-sign-in-alt"></i> Login to Rose Collection</h2>
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn-primary full-width">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+                <p class="auth-switch">
+                    Don't have an account?
+                    <a href="#" onclick="showSignupModal()">Sign Up</a>
+                </p>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" class="auth-form" style="display: none;">
+                <h2><i class="fas fa-user-plus"></i> Create Account</h2>
+                <form id="signupFormElement">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="signupName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" minlength="6" required>
+                        <small>At least 6 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" id="signupConfirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn-primary full-width">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+                <p class="auth-switch">
+                    Already have an account?
+                    <a href="#" onclick="showLoginModal()">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Rose Collection</h3>
+                    <p>Your trusted destination for premium clothing in Khandwa.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html#products">Products</a></li>
+                        <li><a href="my-orders.html">My Orders</a></li>
+                        <li><a href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <p><i class="fas fa-phone"></i> 079990 95600</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Ghanta Ghar, Khandwa</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Rose Collection. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-top" id="scrollTop">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Floating WhatsApp Button -->
+    <a href="https://wa.me/917999095600?text=Hi%20Rose%20Collection!%20I%20have%20a%20query."
+       class="whatsapp-float"
+       target="_blank"
+       title="Chat on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    <script src="orders.js"></script>
+    <script src="auth.js"></script>
+    <script src="cart.js"></script>
+
+    <script>
+        // Inline getStatusInfo in case orders.js doesn't load it
+        if (typeof getStatusInfo !== 'function') {
+            function getStatusInfo(status) {
+                const statusMap = {
+                    'pending': { label: 'Pending', icon: 'clock', color: '#ffc107', description: 'Order received, waiting for confirmation' },
+                    'accepted': { label: 'Accepted', icon: 'check-circle', color: '#17a2b8', description: 'Order confirmed and accepted' },
+                    'processing': { label: 'Processing', icon: 'cog', color: '#007bff', description: 'Order is being prepared' },
+                    'out-for-delivery': { label: 'Out for Delivery', icon: 'shipping-fast', color: '#fd7e14', description: 'Order is on the way' },
+                    'delivered': { label: 'Delivered', icon: 'check-double', color: '#28a745', description: 'Order successfully delivered' },
+                    'cancelled': { label: 'Cancelled', icon: 'times-circle', color: '#dc3545', description: 'Order cancelled' }
+                };
+                return statusMap[status] || statusMap['pending'];
+            }
+        }
+
+        // Simple display function in case user-orders.js fails
+        if (typeof displayUserOrders !== 'function') {
+            function displayUserOrders(orders) {
+                console.log('Using inline displayUserOrders for', orders.length, 'orders');
+
+                const userOrdersList = document.getElementById('userOrdersList');
+                if (!userOrdersList) {
+                    console.error('userOrdersList not found!');
+                    return;
+                }
+
+                userOrdersList.innerHTML = orders.map(order => {
+                    const orderDate = new Date(order.createdAt);
+                    const formattedDate = orderDate.toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+
+                    const statusInfo = getStatusInfo(order.status || 'pending');
+                    const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
+                    return `
+                        <div class="user-order-card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                <div>
+                                    <h3 style="margin: 0 0 0.5rem 0;"><i class="fas fa-receipt"></i> ${order.orderId}</h3>
+                                    <p style="color: #666; margin: 0;"><i class="fas fa-calendar"></i> ${formattedDate}</p>
+                                </div>
+                                <span style="padding: 0.5rem 1rem; border-radius: 20px; background: ${statusInfo.color}20; color: ${statusInfo.color}; font-weight: 600;">
+                                    <i class="fas fa-${statusInfo.icon}"></i> ${statusInfo.label}
+                                </span>
+                            </div>
+
+                            <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="margin: 0.3rem 0;"><strong>Customer:</strong> ${order.customerName}</p>
+                                <p style="margin: 0.3rem 0;"><strong>Phone:</strong> ${order.customerPhone}</p>
+                                <p style="margin: 0.3rem 0;"><strong>Address:</strong> ${order.customerAddress}</p>
+                            </div>
+
+                            <div style="padding: 1rem; background: #e7f3ff; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="margin: 0; color: #004085;"><i class="fas fa-info-circle"></i> ${statusInfo.description}</p>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 2px solid #eee;">
+                                <div>
+                                    <p style="margin: 0; color: #666;">Items: ${itemCount}</p>
+                                    <p style="margin: 0.3rem 0 0 0; font-size: 1.3rem; color: #e94560; font-weight: 700;">₹${parseFloat(order.totalAmount).toFixed(2)}</p>
+                                </div>
+                                <button onclick="alert('Order: ${order.orderId}\\nStatus: ${statusInfo.label}\\nItems: ${itemCount}\\nTotal: ₹${order.totalAmount}')"
+                                        style="padding: 0.8rem 1.5rem; background: #e94560; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                    <i class="fas fa-eye"></i> View Details
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                console.log('Orders displayed successfully');
+            }
+        }
+    </script>
+
+    <script src="user-orders.js"></script>
+    <script>
+        console.log('=== MY ORDERS PAGE LOADING ===');
+
+        // Simple initialization function
+        function initializeMyOrders() {
+            console.log('Initializing My Orders...');
+            console.log('Current User:', currentUser);
+            console.log('Use Firebase:', useFirebase);
+
+            const loginRequired = document.getElementById('loginRequired');
+            const userOrdersContainer = document.getElementById('userOrdersContainer');
+            const ordersLoading = document.getElementById('ordersLoading');
+            const noOrders = document.getElementById('noOrders');
+            const userOrdersList = document.getElementById('userOrdersList');
+
+            // Reset display
+            loginRequired.style.display = 'none';
+            userOrdersContainer.style.display = 'none';
+
+            // Check if user is logged in
+            if (currentUser && (currentUser.email || currentUser.uid)) {
+                console.log('✅ USER LOGGED IN:', currentUser.email);
+
+                // Show orders container
+                userOrdersContainer.style.display = 'block';
+                ordersLoading.style.display = 'block';
+                noOrders.style.display = 'none';
+                userOrdersList.innerHTML = '';
+
+                // Load orders
+                loadUserOrdersNow();
+            } else {
+                console.log('❌ NO USER - Showing login required');
+                loginRequired.style.display = 'flex';
+                userOrdersContainer.style.display = 'none';
+            }
+        }
+
+        // Load orders immediately
+        async function loadUserOrdersNow() {
+            console.log('Loading orders NOW...');
+
+            const ordersLoading = document.getElementById('ordersLoading');
+            const noOrders = document.getElementById('noOrders');
+            const userOrdersList = document.getElementById('userOrdersList');
+
+            // Set timeout to prevent infinite loading
+            const loadingTimeout = setTimeout(() => {
+                console.error('TIMEOUT: Loading took too long');
+                ordersLoading.style.display = 'none';
+                userOrdersList.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; background: #fff3cd; color: #856404; border-radius: 8px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>Loading Timeout</h3>
+                        <p>The orders are taking too long to load.</p>
+                        <button class="btn-primary" onclick="location.reload()" style="margin-top: 1rem;">Refresh Page</button>
+                    </div>
+                `;
+            }, 10000); // 10 second timeout
+
+            try {
+                const userEmail = currentUser.email || currentUser.emailAddress;
+                console.log('Fetching orders for:', userEmail);
+
+                // Get orders
+                let orders = [];
+
+                if (useFirebase && db) {
+                    console.log('Using Firebase with REAL-TIME listener...');
+
+                    try {
+                        // Set up real-time listener (updates automatically!)
+                        clearTimeout(loadingTimeout);
+                        ordersLoading.style.display = 'none';
+
+                        db.collection('orders')
+                            .where('customerEmail', '==', userEmail)
+                            .onSnapshot(snapshot => {
+                                console.log('📡 Real-time update! Documents:', snapshot.size);
+
+                                const orders = [];
+                                snapshot.forEach(doc => {
+                                    const data = doc.data();
+                                    orders.push({
+                                        orderId: doc.id,
+                                        ...data,
+                                        createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt)
+                                    });
+                                });
+
+                                // Sort manually
+                                orders.sort((a, b) => {
+                                    const dateA = new Date(a.createdAt);
+                                    const dateB = new Date(b.createdAt);
+                                    return dateB - dateA;
+                                });
+
+                                console.log('Found orders:', orders.length);
+                                console.log('Orders data:', orders);
+
+                                if (orders.length === 0) {
+                                    console.log('No orders found, showing empty state');
+                                    noOrders.style.display = 'flex';
+                                    userOrdersList.innerHTML = '';
+                                } else {
+                                    console.log('Displaying', orders.length, 'orders');
+                                    noOrders.style.display = 'none';
+                                    displayUserOrders(orders);
+                                }
+                            }, error => {
+                                console.error('Real-time listener error:', error);
+                                // Fallback to one-time fetch
+                                ordersLoading.style.display = 'block';
+                                loadOneTime();
+                            });
+
+                        return; // Exit early since we're using listener
+                    } catch (fbError) {
+                        console.error('Firebase query failed:', fbError);
+                        // Fallback to getting all orders
+                        console.log('Trying fallback: get all orders...');
+                        const allOrders = await getAllOrders();
+                        orders = allOrders.filter(o => o.customerEmail === userEmail);
+                    }
+                }
+
+                // Fallback one-time load function
+                async function loadOneTime() {
+                    try {
+                        const snapshot = await db.collection('orders')
+                            .where('customerEmail', '==', userEmail)
+                            .get();
+
+                        console.log('One-time fetch completed, documents:', snapshot.size);
+
+                        const orders = [];
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            orders.push({
+                                orderId: doc.id,
+                                ...data,
+                                createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt)
+                            });
+                        });
+
+                        orders.sort((a, b) => {
+                            const dateA = new Date(a.createdAt);
+                            const dateB = new Date(b.createdAt);
+                            return dateB - dateA;
+                        });
+
+                        clearTimeout(loadingTimeout);
+                        ordersLoading.style.display = 'none';
+
+                        if (orders.length === 0) {
+                            noOrders.style.display = 'flex';
+                            userOrdersList.innerHTML = '';
+                        } else {
+                            noOrders.style.display = 'none';
+                            displayUserOrders(orders);
+                        }
+                    } catch (err) {
+                        console.error('One-time fetch failed:', err);
+                        clearTimeout(loadingTimeout);
+                        ordersLoading.style.display = 'none';
+                        userOrdersList.innerHTML = `
+                            <div style="text-align: center; padding: 2rem; background: #f8d7da; color: #721c24; border-radius: 8px;">
+                                <i class="fas fa-exclamation-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h3>Error Loading Orders</h3>
+                                <p>${err.message}</p>
+                                <button class="btn-primary" onclick="location.reload()" style="margin-top: 1rem;">Refresh Page</button>
+                            </div>
+                        `;
+                    }
+                }
+
+                // LocalStorage fallback (if not using Firebase)
+                if (!useFirebase || !db) {
+                    console.log('Using LocalStorage...');
+                    const allOrders = JSON.parse(localStorage.getItem('roseCollectionOrders') || '[]');
+                    const orders = allOrders.filter(o => o.customerEmail === userEmail);
+
+                    clearTimeout(loadingTimeout);
+                    console.log('Found orders:', orders.length);
+                    console.log('Orders data:', orders);
+
+                    ordersLoading.style.display = 'none';
+
+                    if (orders.length === 0) {
+                        console.log('No orders found, showing empty state');
+                        noOrders.style.display = 'flex';
+                        userOrdersList.innerHTML = '';
+                    } else {
+                        console.log('Displaying', orders.length, 'orders');
+                        noOrders.style.display = 'none';
+                        displayUserOrders(orders);
+                    }
+                }
+            } catch (error) {
+                clearTimeout(loadingTimeout);
+                console.error('ERROR loading orders:', error);
+                console.error('Error stack:', error.stack);
+                ordersLoading.style.display = 'none';
+                userOrdersList.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; background: #f8d7da; color: #721c24; border-radius: 8px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>Error Loading Orders</h3>
+                        <p>${error.message}</p>
+                        <p style="font-size: 0.9rem; margin-top: 1rem;">Check console for details</p>
+                        <button class="btn-primary" onclick="location.reload()" style="margin-top: 1rem;">Refresh Page</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing auth and cart...');
+
+            // Initialize auth and cart
+            if (typeof initAuth === 'function') initAuth();
+            if (typeof initCart === 'function') initCart();
+
+            // Try multiple times to initialize orders (wait for auth)
+            let attempts = 0;
+            const maxAttempts = 5;
+
+            function tryInit() {
+                attempts++;
+                console.log(`Attempt ${attempts} to initialize...`);
+
+                if (useFirebase && auth) {
+                    const user = auth.currentUser;
+                    if (user) {
+                        console.log('Firebase user found immediately');
+                        currentUser = user;
+                        initializeMyOrders();
+                        return;
+                    }
+
+                    if (attempts >= maxAttempts) {
+                        console.log('Max attempts reached, listening for auth changes...');
+                        auth.onAuthStateChanged(user => {
+                            console.log('Auth state changed:', user);
+                            currentUser = user;
+                            initializeMyOrders();
+                        });
+                        return;
+                    }
+                } else if (currentUser) {
+                    console.log('CurrentUser already set');
+                    initializeMyOrders();
+                    return;
+                } else if (attempts >= maxAttempts) {
+                    console.log('No Firebase, no currentUser, showing login required');
+                    initializeMyOrders();
+                    return;
+                }
+
+                // Try again in 500ms
+                setTimeout(tryInit, 500);
+            }
+
+            // Start trying
+            setTimeout(tryInit, 500);
+
+
+            // Mobile menu toggle
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileNav = document.getElementById('mobileNav');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    mobileNav.classList.toggle('active');
+                });
+            }
+
+            // Scroll to top
+            const scrollTopBtn = document.getElementById('scrollTop');
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    scrollTopBtn.classList.add('show');
+                } else {
+                    scrollTopBtn.classList.remove('show');
+                }
+            });
+            scrollTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>

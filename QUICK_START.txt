@@ -1,0 +1,58 @@
+═══════════════════════════════════════════════════════════
+  🌹 ROSE COLLECTION - QUICK START GUIDE 🌹
+═══════════════════════════════════════════════════════════
+
+⚠️  IMPORTANT: Don't double-click HTML files!
+    They won't work with Firebase.
+
+✅  CORRECT WAY TO RUN:
+
+  1. Open Terminal
+
+  2. Copy and paste this command:
+
+     cd /Users/hemant.mangwani/gitproject/20jan/Bhagavata/shop && python3 -m http.server 8000
+
+  3. Open your browser and go to:
+
+     http://localhost:8000
+
+  4. Done! Now everything works! 🎉
+
+═══════════════════════════════════════════════════════════
+
+🚀 EVEN EASIER - Double-click this file:
+   start-server.sh
+
+   (It will auto-start server and open browser)
+
+═══════════════════════════════════════════════════════════
+
+📱 PAGES TO TEST:
+
+   • Homepage:      http://localhost:8000/index.html
+   • Admin Panel:   http://localhost:8000/admin.html
+   • My Orders:     http://localhost:8000/my-orders.html
+   • Debug Tool:    http://localhost:8000/test-orders.html
+
+═══════════════════════════════════════════════════════════
+
+🛑 TO STOP SERVER:
+   Press Ctrl+C in the terminal
+
+═══════════════════════════════════════════════════════════
+
+❓ WHY DO I NEED THIS?
+
+   Firebase ONLY works with http:// or https://
+   NOT with file:/// (when you double-click files)
+
+   When you see: file:///Users/... ❌ WRONG
+   Should see:   http://localhost:8000 ✅ CORRECT
+
+═══════════════════════════════════════════════════════════
+
+📧 Login: hemant@gmail.com
+🔑 Password: [your password]
+
+═══════════════════════════════════════════════════════════
