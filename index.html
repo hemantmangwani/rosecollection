@@ -60,69 +60,210 @@
     <div id="authModal" class="modal" style="display: none;">
         <div class="modal-content auth-modal">
             <span class="close-modal" onclick="closeAuthModal()">&times;</span>
+            <h2 class="auth-modal-title"><i class="fas fa-lock"></i> Login to Rose Collection</h2>
 
-            <!-- Login Form -->
-            <div id="loginForm" class="auth-form">
-                <h2><i class="fas fa-sign-in-alt"></i> Login to Rose Collection</h2>
-                <form id="loginFormElement">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="loginEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="loginPassword" required>
-                    </div>
-                    <button type="submit" class="btn-primary full-width">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </button>
-                </form>
-                <p class="auth-switch">
-                    Don't have an account?
-                    <a href="#" onclick="showSignupModal()">Sign Up</a>
-                </p>
+            <!-- Auth Method Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-google" data-method="google">
+                    <i class="fab fa-google"></i> Google
+                </button>
+                <button class="auth-tab" id="tab-email" data-method="email">
+                    <i class="fas fa-envelope"></i> Email
+                </button>
+                <button class="auth-tab" id="tab-phone" data-method="phone">
+                    <i class="fas fa-mobile-alt"></i> Phone OTP
+                </button>
             </div>
 
-            <!-- Signup Form -->
-            <div id="signupForm" class="auth-form" style="display: none;">
-                <h2><i class="fas fa-user-plus"></i> Create Account</h2>
-                <form id="signupFormElement">
+            <!-- Google Sign-In Content -->
+            <div id="googleContent" class="auth-tab-content">
+                <p class="auth-subtitle">Quick and secure sign-in</p>
+
+                <button
+                    id="googleSignInBtn"
+                    class="btn-google full-width"
+                    type="button"
+                >
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" height="18">
+                    <span>Continue with Google</span>
+                </button>
+
+                <div class="google-benefits">
+                    <p><i class="fas fa-check-circle"></i> No password needed</p>
+                    <p><i class="fas fa-check-circle"></i> Auto-fill your details</p>
+                    <p><i class="fas fa-check-circle"></i> One-click login</p>
+                </div>
+            </div>
+
+            <!-- Phone OTP Content -->
+            <div id="phoneOTPContent" class="auth-tab-content" style="display: none;">
+                <!-- Step 1: Enter Phone -->
+                <div id="phoneInputStep">
+                    <p class="auth-subtitle">We'll send you an OTP via SMS</p>
+
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <div class="phone-input-group">
+                            <span class="country-code">+91</span>
+                            <input
+                                type="tel"
+                                id="phoneNumberInput"
+                                placeholder="9876543210"
+                                maxlength="10"
+                                pattern="[6-9][0-9]{9}"
+                                inputmode="numeric"
+                                autocomplete="tel"
+                            >
+                        </div>
+                        <small class="form-hint">10-digit mobile number starting with 6-9</small>
+                    </div>
+
+                    <div id="recaptcha-container"></div>
+
+                    <button
+                        id="phone-send-otp-btn"
+                        class="btn-primary full-width"
+                        type="button"
+                    >
+                        <i class="fas fa-paper-plane"></i> Send OTP
+                    </button>
+                </div>
+
+                <!-- Step 2: Enter OTP (hidden initially) -->
+                <div id="phoneOTPStep" style="display: none;">
+                    <p class="auth-subtitle">Enter OTP sent to <strong>+91 <span id="sentToNumber"></span></strong></p>
+
+                    <div class="form-group">
+                        <label>6-Digit OTP</label>
+                        <div class="otp-inputs">
+                            <input type="text" maxlength="1" class="otp-input" data-index="0" inputmode="numeric" pattern="[0-9]">
+                            <input type="text" maxlength="1" class="otp-input" data-index="1" inputmode="numeric" pattern="[0-9]">
+                            <input type="text" maxlength="1" class="otp-input" data-index="2" inputmode="numeric" pattern="[0-9]">
+                            <input type="text" maxlength="1" class="otp-input" data-index="3" inputmode="numeric" pattern="[0-9]">
+                            <input type="text" maxlength="1" class="otp-input" data-index="4" inputmode="numeric" pattern="[0-9]">
+                            <input type="text" maxlength="1" class="otp-input" data-index="5" inputmode="numeric" pattern="[0-9]">
+                        </div>
+                    </div>
+
+                    <button
+                        id="phone-verify-otp-btn"
+                        class="btn-primary full-width"
+                        type="button"
+                    >
+                        <i class="fas fa-check-circle"></i> Verify OTP
+                    </button>
+
+                    <div class="otp-resend">
+                        <p id="otpTimer" class="otp-timer">Resend OTP in <span id="countdown">60</span>s</p>
+                        <button
+                            id="resendOTPBtn"
+                            class="btn-text"
+                            style="display: none;"
+                            type="button"
+                        >
+                            <i class="fas fa-redo"></i> Resend OTP
+                        </button>
+                    </div>
+
+                    <button class="btn-text" id="backToPhoneInput" type="button">
+                        <i class="fas fa-arrow-left"></i> Change Number
+                    </button>
+                </div>
+
+                <!-- Step 3: Profile Completion (shown for new users, hidden initially) -->
+                <div id="phoneProfileStep" style="display: none;">
+                    <p class="auth-subtitle">Complete your profile to continue</p>
+
                     <div class="form-group">
                         <label>Full Name *</label>
-                        <input type="text" id="signupName" placeholder="e.g., John Doe" required>
+                        <input type="text" id="profileName" placeholder="e.g., Ram Kumar" required>
                     </div>
                     <div class="form-group">
-                        <label>Email *</label>
-                        <input type="email" id="signupEmail" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" placeholder="e.g., user@example.com" required>
-                        <small class="form-hint">We'll use this for order confirmations</small>
+                        <label>Email (Optional)</label>
+                        <input type="email" id="profileEmail" placeholder="e.g., ram@example.com">
+                        <small class="form-hint">Helps with order tracking and notifications</small>
                     </div>
-                    <div class="form-group">
-                        <label>Phone Number *</label>
-                        <input type="tel" id="signupPhone" pattern="[6-9][0-9]{9}" placeholder="e.g., 9876543210" maxlength="10" required>
-                        <small class="form-hint">10-digit mobile number for order updates</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Delivery Address (Optional)</label>
-                        <textarea id="signupAddress" rows="2" placeholder="Your default delivery address"></textarea>
-                        <small class="form-hint">You can add this later</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Password *</label>
-                        <input type="password" id="signupPassword" minlength="6" required>
-                        <small>At least 6 characters</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Confirm Password *</label>
-                        <input type="password" id="signupConfirmPassword" required>
-                    </div>
-                    <button type="submit" class="btn-primary full-width">
-                        <i class="fas fa-user-plus"></i> Create Account
+
+                    <button
+                        id="saveProfileBtn"
+                        class="btn-primary full-width"
+                        type="button"
+                    >
+                        <i class="fas fa-check"></i> Continue
                     </button>
-                </form>
-                <p class="auth-switch">
-                    Already have an account?
-                    <a href="#" onclick="showLoginModal()">Login</a>
-                </p>
+                </div>
+            </div>
+
+            <!-- Email/Password Content -->
+            <div id="emailContent" class="auth-tab-content" style="display: none;">
+                <!-- Login Form -->
+                <div id="emailLoginForm">
+                    <p class="auth-subtitle">Sign in with your email and password</p>
+                    <form id="loginFormElement">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="loginEmail" placeholder="e.g., user@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        </div>
+                        <button type="submit" class="btn-primary full-width">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </form>
+                    <p class="auth-switch">
+                        Don't have an account?
+                        <a href="#" id="showEmailSignup">Sign Up</a>
+                    </p>
+                </div>
+
+                <!-- Signup Form -->
+                <div id="emailSignupForm" style="display: none;">
+                    <p class="auth-subtitle">Create a new account</p>
+                    <form id="signupFormElement">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" id="signupName" placeholder="e.g., John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="signupEmail" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" placeholder="e.g., user@example.com" required>
+                            <small class="form-hint">We'll use this for order confirmations</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number *</label>
+                            <input type="tel" id="signupPhone" pattern="[6-9][0-9]{9}" placeholder="e.g., 9876543210" maxlength="10" required>
+                            <small class="form-hint">10-digit mobile number for order updates</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Delivery Address (Optional)</label>
+                            <textarea id="signupAddress" rows="2" placeholder="Your default delivery address"></textarea>
+                            <small class="form-hint">You can add this later</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Password *</label>
+                            <input type="password" id="signupPassword" minlength="6" placeholder="At least 6 characters" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password *</label>
+                            <input type="password" id="signupConfirmPassword" placeholder="Re-enter password" required>
+                        </div>
+                        <button type="submit" class="btn-primary full-width">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
+                    </form>
+                    <p class="auth-switch">
+                        Already have an account?
+                        <a href="#" id="showEmailLogin">Login</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="authLoader" class="auth-loader" style="display: none;">
+                <div class="spinner"></div>
+                <p id="authLoaderMessage">Processing...</p>
             </div>
         </div>
     </div>
