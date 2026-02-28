@@ -5,8 +5,32 @@ let currentUser = null;
 // Check if user is logged in
 function checkUserAuth() {
     if (useFirebase && auth) {
-        auth.onAuthStateChanged(user => {
-            currentUser = user;
+        auth.onAuthStateChanged(async user => {
+            if (user && db) {
+                // Load additional user details from Firestore
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        currentUser = {
+                            ...user,
+                            displayName: user.displayName || userData.name, // Use Firebase displayName or Firestore name
+                            phone: userData.phone,
+                            address: userData.address,
+                            name: userData.name // Keep name field for reference
+                        };
+                        console.log('✅ User loaded from Firestore:', currentUser.displayName);
+                    } else {
+                        currentUser = user;
+                        console.log('⚠️ User not found in Firestore, using Firebase auth only');
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading user details:', error);
+                    currentUser = user;
+                }
+            } else {
+                currentUser = user;
+            }
             updateUserUI();
         });
     } else {
@@ -14,6 +38,7 @@ function checkUserAuth() {
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
+            console.log('✅ User loaded from localStorage:', currentUser.displayName);
         }
         updateUserUI();
     }
@@ -28,12 +53,21 @@ function updateUserUI() {
 
     if (currentUser) {
         // User is logged in
-        let displayName = currentUser.displayName || 'User';
+        let displayName = currentUser.displayName || currentUser.name || 'User';
+
+        console.log('👤 Updating UI for user:', {
+            displayName: currentUser.displayName,
+            name: currentUser.name,
+            email: currentUser.email,
+            finalDisplayName: displayName
+        });
 
         // If no display name, extract name from email
-        if (!currentUser.displayName && currentUser.email) {
-            const emailName = currentUser.email.split('@')[0];
-            displayName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+        if (!displayName || displayName === 'User') {
+            if (currentUser.email) {
+                const emailName = currentUser.email.split('@')[0];
+                displayName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+            }
         }
 
         // Use just first name
@@ -46,6 +80,8 @@ function updateUserUI() {
         if (userMenu) {
             userMenu.style.display = 'block';
         }
+
+        console.log('✅ UI updated with name:', firstName);
     } else {
         // User is not logged in
         userBtn.innerHTML = `
@@ -88,9 +124,10 @@ async function handleLogin(e) {
         try {
             await auth.signInWithEmailAndPassword(email, password);
             closeAuthModal();
-            alert('✅ Login successful!');
+            showSuccess('Welcome back! Login successful');
+            // User details will be loaded by onAuthStateChanged
         } catch (error) {
-            alert('❌ Login failed: ' + error.message);
+            showError('Login failed: ' + error.message);
         }
     } else {
         // Fallback simple auth
@@ -98,13 +135,20 @@ async function handleLogin(e) {
         const user = users.find(u => u.email === email && u.password === password);
 
         if (user) {
-            currentUser = { email: user.email, displayName: user.name };
+            currentUser = {
+                email: user.email,
+                displayName: user.name,
+                phone: user.phone || '',
+                address: user.address || '',
+                uid: user.uid
+            };
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             updateUserUI();
             closeAuthModal();
-            alert('✅ Login successful!');
+            showSuccess(`Welcome back, ${user.name}!`);
+            console.log('✅ Logged in as:', currentUser.displayName);
         } else {
-            alert('❌ Invalid email or password!');
+            showError('Invalid email or password');
         }
     }
 }
@@ -113,10 +157,28 @@ async function handleLogin(e) {
 async function handleSignup(e) {
     e.preventDefault();
 
-    const name = document.getElementById('signupName').value;
-    const email = document.getElementById('signupEmail').value;
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const phone = document.getElementById('signupPhone').value.trim();
+    const address = document.getElementById('signupAddress').value.trim();
     const password = document.getElementById('signupPassword').value;
     const confirmPassword = document.getElementById('signupConfirmPassword').value;
+
+    // Validate email
+    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+    if (!emailRegex.test(email)) {
+        alert('❌ Please enter a valid email address');
+        document.getElementById('signupEmail').focus();
+        return;
+    }
+
+    // Validate phone
+    const phoneRegex = /^[6-9][0-9]{9}$/;
+    if (!phoneRegex.test(phone)) {
+        alert('❌ Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9');
+        document.getElementById('signupPhone').focus();
+        return;
+    }
 
     if (password !== confirmPassword) {
         alert('❌ Passwords do not match!');
@@ -134,10 +196,22 @@ async function handleSignup(e) {
             await userCredential.user.updateProfile({
                 displayName: name
             });
+
+            // Save additional user details to Firestore
+            if (db) {
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    address: address || '',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+
             closeAuthModal();
-            alert('✅ Account created successfully!');
+            showSuccess('Account created successfully! Your details will be auto-filled during checkout', 5000);
         } catch (error) {
-            alert('❌ Signup failed: ' + error.message);
+            showError('Signup failed: ' + error.message);
         }
     } else {
         // Fallback simple auth
@@ -148,14 +222,29 @@ async function handleSignup(e) {
             return;
         }
 
-        users.push({ email, password, name });
+        const newUser = {
+            email,
+            password,
+            name,
+            phone,
+            address: address || '',
+            uid: 'user_' + Date.now()
+        };
+
+        users.push(newUser);
         localStorage.setItem('users', JSON.stringify(users));
 
-        currentUser = { email, displayName: name };
+        currentUser = {
+            email,
+            displayName: name,
+            phone,
+            address: address || '',
+            uid: newUser.uid
+        };
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         updateUserUI();
         closeAuthModal();
-        alert('✅ Account created successfully!');
+        showSuccess(`Welcome, ${name}! Your details will be auto-filled during checkout`, 5000);
     }
 }
 
@@ -171,8 +260,8 @@ async function handleLogout() {
         updateUserUI();
     }
 
-    alert('✅ Logged out successfully!');
-    window.location.reload();
+    showSuccess('Logged out successfully!');
+    setTimeout(() => window.location.reload(), 1000);
 }
 
 // Initialize auth

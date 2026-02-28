@@ -485,8 +485,16 @@ window.addImageURLs = addImageURLs;
 
 // Handle multiple image files upload
 async function handleImageFiles(files) {
+    console.log('📸 handleImageFiles called with', files.length, 'files');
+
     const dropZone = document.getElementById('imageDropZone');
     const uploadProgress = document.getElementById('uploadProgress');
+
+    if (!dropZone || !uploadProgress) {
+        console.error('❌ Drop zone or upload progress element not found');
+        alert('❌ Error: Upload elements not found!');
+        return;
+    }
 
     dropZone.style.display = 'none';
     uploadProgress.style.display = 'block';
@@ -496,26 +504,39 @@ async function handleImageFiles(files) {
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        console.log(`📄 Processing file ${i + 1}/${totalFiles}:`, file.name, file.type, file.size);
 
         if (!file.type.startsWith('image/')) {
+            console.warn('❌ Not an image file:', file.name);
             alert(`❌ ${file.name} is not an image file!`);
             continue;
         }
 
         if (file.size > 10 * 1024 * 1024) {
+            console.warn('❌ File too large:', file.name, file.size);
             alert(`❌ ${file.name} is too large! Max 10MB`);
             continue;
         }
 
-        document.getElementById('progressText').textContent = `Uploading ${i + 1} of ${totalFiles}...`;
-        document.getElementById('progressFill').style.width = `${((i + 1) / totalFiles) * 100}%`;
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
 
+        if (progressText) progressText.textContent = `Uploading ${i + 1} of ${totalFiles}...`;
+        if (progressFill) progressFill.style.width = `${((i + 1) / totalFiles) * 100}%`;
+
+        console.log('⏳ Starting upload for:', file.name);
         const imageURL = await uploadSingleImage(file);
+
         if (imageURL) {
+            console.log('✅ Upload successful:', imageURL);
             uploadedImageURLs.push(imageURL);
             successCount++;
+        } else {
+            console.error('❌ Upload failed for:', file.name);
         }
     }
+
+    console.log(`✅ Upload complete: ${successCount}/${totalFiles} successful`);
 
     uploadProgress.style.display = 'none';
     dropZone.style.display = 'block';
@@ -523,49 +544,56 @@ async function handleImageFiles(files) {
     if (successCount > 0) {
         // Update hidden field
         document.getElementById('productImages').value = JSON.stringify(uploadedImageURLs);
+        console.log('Updated productImages field:', uploadedImageURLs);
 
         // Show preview
         displayImagesPreview('imagesPreviewContainer');
 
         alert(`✅ ${successCount} image(s) uploaded successfully!`);
+    } else {
+        alert('❌ No images were uploaded successfully!');
     }
 }
 
 // Upload single image and return URL
 async function uploadSingleImage(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
+    console.log('🔄 uploadSingleImage starting for:', file.name);
 
-        reader.onload = async function(e) {
-            const base64Image = e.target.result.split(',')[1];
+    // Check if Firebase Storage is available
+    if (!storage) {
+        console.error('❌ Firebase Storage not initialized');
+        alert('❌ Firebase Storage not configured. Please use "Add URLs" to paste image URLs instead.');
+        return null;
+    }
 
-            try {
-                const formData = new FormData();
-                formData.append('image', base64Image);
+    try {
+        // Create a unique filename
+        const timestamp = Date.now();
+        const fileName = `products/${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
 
-                const response = await fetch('https://api.imgbb.com/1/upload?key=d607b8116e90c07a5e744b85634be0fc', {
-                    method: 'POST',
-                    body: formData
-                });
+        console.log('📤 Uploading to Firebase Storage:', fileName);
 
-                const result = await response.json();
+        // Upload to Firebase Storage
+        const storageRef = storage.ref();
+        const fileRef = storageRef.child(fileName);
 
-                if (result.success && result.data) {
-                    const imageURL = result.data.image?.url || result.data.display_url || result.data.url;
-                    console.log('✅ Image uploaded:', imageURL);
-                    resolve(imageURL);
-                } else {
-                    console.error('❌ Upload failed for', file.name);
-                    resolve(null);
-                }
-            } catch (error) {
-                console.error('❌ Upload error:', error);
-                resolve(null);
-            }
-        };
+        const uploadTask = await fileRef.put(file);
+        console.log('✅ File uploaded to Firebase Storage');
 
-        reader.readAsDataURL(file);
-    });
+        // Get download URL
+        const downloadURL = await uploadTask.ref.getDownloadURL();
+        console.log('✅ Download URL obtained:', downloadURL);
+
+        return downloadURL;
+
+    } catch (error) {
+        console.error('❌ Firebase Storage upload error:', error);
+
+        // If Firebase fails, show helpful message with instructions
+        alert(`❌ Direct upload is not configured.\n\nPlease use the "URL" tab instead:\n\n1. Upload image to https://imgbb.com/\n2. Copy the direct image URL\n3. Click "URL" tab and paste the URL\n4. Click "Add URLs"`);
+
+        return null;
+    }
 }
 
 // Display images preview with remove buttons

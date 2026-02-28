@@ -974,6 +974,25 @@ body {
     }
 }
 
+/* Tablet view - 2 columns for product buttons */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .product-actions {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .add-to-cart-btn {
+        grid-column: 1 / -1;
+    }
+
+    .add-to-cart-btn,
+    .order-now-btn,
+    .buy-whatsapp-btn {
+        font-size: 0.85rem;
+        padding: 0.8rem 0.6rem;
+    }
+}
+
 @media (max-width: 768px) {
     .whatsapp-float {
         bottom: 80px;
@@ -981,6 +1000,81 @@ body {
         width: 55px;
         height: 55px;
         font-size: 1.8rem;
+    }
+
+    /* Admin panel improvements for mobile */
+    .products-table {
+        padding: 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        font-size: 0.85rem;
+        min-width: 800px; /* Force horizontal scroll for better readability */
+    }
+
+    table th,
+    table td {
+        padding: 0.7rem 0.5rem;
+        white-space: nowrap;
+    }
+
+    table img {
+        width: 50px;
+        height: 50px;
+    }
+
+    /* Admin tabs on mobile */
+    .admin-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+    }
+
+    .admin-tab {
+        padding: 0.8rem 1.2rem;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+
+    /* Admin buttons on mobile */
+    .admin-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .admin-actions button {
+        width: 100%;
+    }
+
+    /* Product form on mobile */
+    .product-form {
+        padding: 1rem;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 0.95rem;
+    }
+
+    /* Add scroll hint for tables */
+    .products-table::after {
+        content: '← Scroll horizontally to see more →';
+        display: block;
+        text-align: center;
+        padding: 0.5rem;
+        color: #666;
+        font-size: 0.8rem;
+        font-style: italic;
+        background: linear-gradient(90deg, transparent, #f0f0f0 20%, #f0f0f0 80%, transparent);
+        margin-top: 1rem;
+        border-radius: 5px;
     }
 }
 
@@ -1402,11 +1496,199 @@ body {
     font-size: 0.85rem;
 }
 
+.form-hint {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* Form validation styling */
+.form-group input:invalid:not(:placeholder-shown),
+.form-group textarea:invalid:not(:placeholder-shown) {
+    border-color: #e74c3c;
+}
+
+.form-group input:valid:not(:placeholder-shown),
+.form-group textarea:valid:not(:placeholder-shown) {
+    border-color: #27ae60;
+}
+
+/* Location button styling */
+.address-input-wrapper {
+    position: relative;
+}
+
+.btn-location {
+    margin-top: 0.5rem;
+    padding: 0.7rem 1.2rem;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-location:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    background: linear-gradient(135deg, #2980b9, #3498db);
+}
+
+.btn-location:active {
+    transform: translateY(0);
+}
+
+.btn-location i {
+    font-size: 1rem;
+}
+
+.btn-location:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .hint {
     text-align: center;
     color: #666;
     margin-top: 1rem;
     font-size: 0.9rem;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+.toast {
+    background: white;
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-width: 320px;
+    max-width: 420px;
+    pointer-events: auto;
+    animation: slideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border-left: 4px solid #3498db;
+}
+
+.toast.success {
+    border-left-color: #27ae60;
+}
+
+.toast.success .toast-icon {
+    color: #27ae60;
+}
+
+.toast.error {
+    border-left-color: #e74c3c;
+}
+
+.toast.error .toast-icon {
+    color: #e74c3c;
+}
+
+.toast.info {
+    border-left-color: #3498db;
+}
+
+.toast.info .toast-icon {
+    color: #3498db;
+}
+
+.toast-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-message {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.toast-close:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(450px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(450px);
+        opacity: 0;
+    }
+}
+
+.toast.hiding {
+    animation: slideOut 0.3s ease-out forwards;
+}
+
+@media (max-width: 480px) {
+    .toast-container {
+        right: 10px;
+        left: 10px;
+        top: 70px;
+    }
+
+    .toast {
+        min-width: auto;
+        max-width: 100%;
+    }
 }
 
 .admin-section {
@@ -2407,11 +2689,42 @@ table img {
     }
 
     .logo h1 {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
     }
 
     .logo i {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
+    }
+
+    /* Admin header improvements */
+    .admin-header {
+        padding: 1rem;
+    }
+
+    .admin-header h2 {
+        font-size: 1.5rem;
+    }
+
+    /* Make table more compact on very small screens */
+    table {
+        font-size: 0.75rem;
+    }
+
+    table th,
+    table td {
+        padding: 0.5rem 0.3rem;
+    }
+
+    table img {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* Action buttons in table */
+    .btn-edit,
+    .btn-delete {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
     }
 
     .nav {
@@ -2462,6 +2775,53 @@ table img {
     .admin-badge {
         position: static;
         margin-left: 0.5rem;
+    }
+
+    /* Product action buttons on mobile - stack vertically */
+    .product-actions {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .add-to-cart-btn,
+    .order-now-btn,
+    .buy-whatsapp-btn {
+        padding: 0.9rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    /* Color selector on mobile */
+    .color-selector {
+        margin: 1rem 0;
+    }
+
+    .color-option-wrapper {
+        margin-bottom: 0.5rem;
+    }
+
+    .color-option {
+        width: 40px;
+        height: 40px;
+    }
+
+    .color-option-name {
+        font-size: 0.85rem;
+    }
+
+    /* Product slider on mobile */
+    .product-image-slider {
+        height: 250px;
+    }
+
+    .slider-nav {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+
+    .slider-dot {
+        width: 8px;
+        height: 8px;
     }
 }
 

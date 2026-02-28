@@ -176,8 +176,49 @@ function checkout() {
 
     // Show checkout form modal
     document.getElementById('checkoutModal').style.display = 'flex';
-    document.getElementById('checkoutName').value = currentUser.displayName || '';
-    document.getElementById('checkoutEmail').value = currentUser.email || '';
+
+    // Auto-fill user details
+    const nameField = document.getElementById('checkoutName');
+    const emailField = document.getElementById('checkoutEmail');
+    const phoneField = document.getElementById('checkoutPhone');
+    const addressField = document.getElementById('checkoutAddress');
+
+    nameField.value = currentUser.displayName || currentUser.name || '';
+    emailField.value = currentUser.email || '';
+    phoneField.value = currentUser.phone || '';
+    addressField.value = currentUser.address || '';
+
+    // Count how many fields were auto-filled
+    const autoFilledFields = [];
+    if (nameField.value) autoFilledFields.push('Name');
+    if (emailField.value) autoFilledFields.push('Email');
+    if (phoneField.value) autoFilledFields.push('Phone');
+    if (addressField.value) autoFilledFields.push('Address');
+
+    if (autoFilledFields.length > 0) {
+        console.log(`✅ Auto-filled: ${autoFilledFields.join(', ')}`);
+
+        // Show a subtle notification
+        if (phoneField.value && addressField.value) {
+            // All important fields filled
+            console.log('🎉 All your details are ready! Just review and confirm.');
+        } else if (!addressField.value) {
+            console.log('📍 Tip: Click "Use Current Location" to auto-fill your address');
+        }
+    } else {
+        console.log('ℹ️ Please fill in your details');
+    }
+
+    // Update checkout total
+    updateCheckoutTotal();
+}
+
+// Update checkout total (defined in index.html, but make sure it's called)
+function updateCheckoutTotal() {
+    const checkoutTotal = document.getElementById('checkoutTotal');
+    if (checkoutTotal) {
+        checkoutTotal.textContent = '₹' + getCartTotal().toFixed(2);
+    }
 }
 
 // Close checkout modal
@@ -185,14 +226,176 @@ function closeCheckoutModal() {
     document.getElementById('checkoutModal').style.display = 'none';
 }
 
+// Get current location using Geolocation API
+async function getCurrentLocation() {
+    const addressField = document.getElementById('checkoutAddress');
+    const locationBtn = document.querySelector('.btn-location');
+
+    if (!navigator.geolocation) {
+        alert('❌ Geolocation is not supported by your browser');
+        return;
+    }
+
+    // Disable button and show loading
+    locationBtn.disabled = true;
+    locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            console.log('📍 Location obtained:', lat, lon);
+
+            try {
+                // Use reverse geocoding to get address
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                const data = await response.json();
+
+                if (data && data.display_name) {
+                    addressField.value = data.display_name;
+                    showSuccess('Location detected successfully!');
+                } else {
+                    addressField.value = `Latitude: ${lat}, Longitude: ${lon}`;
+                    showInfo('Coordinates obtained. Please add more address details.');
+                }
+            } catch (error) {
+                console.error('Error getting address:', error);
+                addressField.value = `Latitude: ${lat}, Longitude: ${lon}`;
+                showInfo('Location coordinates obtained. Please add more address details.');
+            } finally {
+                // Re-enable button
+                locationBtn.disabled = false;
+                locationBtn.innerHTML = '<i class="fas fa-location-arrow"></i> Use Current Location';
+            }
+        },
+        (error) => {
+            console.error('Geolocation error:', error);
+            let errorMessage = 'Unable to get your location. ';
+
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage += 'Please enable location permissions in your browser settings.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage += 'Location information is unavailable.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage += 'Request timed out. Please try again.';
+                    break;
+                default:
+                    errorMessage += 'An unknown error occurred.';
+            }
+
+            alert('❌ ' + errorMessage);
+
+            // Re-enable button
+            locationBtn.disabled = false;
+            locationBtn.innerHTML = '<i class="fas fa-location-arrow"></i> Use Current Location';
+        }
+    );
+}
+
+// Validate email format
+function validateEmail(email) {
+    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+    return emailRegex.test(email);
+}
+
+// Validate phone number (Indian format: 10 digits starting with 6-9)
+function validatePhone(phone) {
+    const phoneRegex = /^[6-9][0-9]{9}$/;
+    return phoneRegex.test(phone);
+}
+
+// Update user profile with latest phone and address
+async function updateUserProfile(phone, address) {
+    if (!currentUser) return;
+
+    try {
+        // Check if phone or address has changed
+        const phoneChanged = phone && phone !== currentUser.phone;
+        const addressChanged = address && address !== currentUser.address;
+
+        if (!phoneChanged && !addressChanged) {
+            console.log('ℹ️ No profile changes needed');
+            return;
+        }
+
+        if (useFirebase && db && currentUser.uid) {
+            // Update Firestore
+            await db.collection('users').doc(currentUser.uid).update({
+                phone: phone,
+                address: address,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Update current user object
+            currentUser.phone = phone;
+            currentUser.address = address;
+
+            console.log('✅ User profile updated in Firestore');
+        } else {
+            // Update localStorage
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userIndex = users.findIndex(u => u.email === currentUser.email);
+
+            if (userIndex !== -1) {
+                users[userIndex].phone = phone;
+                users[userIndex].address = address;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+
+            // Update current user
+            currentUser.phone = phone;
+            currentUser.address = address;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            console.log('✅ User profile updated in localStorage');
+        }
+
+        // Show notification if changes were saved
+        if (phoneChanged || addressChanged) {
+            const changes = [];
+            if (phoneChanged) changes.push('phone number');
+            if (addressChanged) changes.push('address');
+            console.log(`📝 Saved ${changes.join(' and ')} to your profile for future orders`);
+        }
+    } catch (error) {
+        console.error('❌ Error updating user profile:', error);
+        // Don't block order placement if profile update fails
+    }
+}
+
 // Process order with address
 async function processOrder(e) {
     e.preventDefault();
 
-    const customerName = document.getElementById('checkoutName').value;
-    const customerEmail = document.getElementById('checkoutEmail').value;
-    const customerPhone = document.getElementById('checkoutPhone').value;
-    const customerAddress = document.getElementById('checkoutAddress').value;
+    const customerName = document.getElementById('checkoutName').value.trim();
+    const customerEmail = document.getElementById('checkoutEmail').value.trim();
+    const customerPhone = document.getElementById('checkoutPhone').value.trim();
+    const customerAddress = document.getElementById('checkoutAddress').value.trim();
+
+    // Validate email
+    if (!validateEmail(customerEmail)) {
+        alert('❌ Please enter a valid email address (e.g., user@example.com)');
+        document.getElementById('checkoutEmail').focus();
+        return;
+    }
+
+    // Validate phone number
+    if (!validatePhone(customerPhone)) {
+        alert('❌ Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9');
+        document.getElementById('checkoutPhone').focus();
+        return;
+    }
+
+    // Validate address length
+    if (customerAddress.length < 10) {
+        alert('❌ Please enter a complete delivery address');
+        document.getElementById('checkoutAddress').focus();
+        return;
+    }
 
     // Save order to database
     const orderData = {
@@ -208,6 +411,9 @@ async function processOrder(e) {
     const result = await saveOrder(orderData);
 
     if (result.success) {
+        // Update user profile with new address/phone if changed
+        await updateUserProfile(customerPhone, customerAddress);
+
         // Send to WhatsApp
         const phoneNumber = '917999095600';
 
@@ -244,14 +450,19 @@ async function processOrder(e) {
         closeCartModal();
 
         // Show success message
-        alert(`✅ Order ${result.orderId} placed successfully!\nOpening WhatsApp...`);
+        showSuccess(`Order #${result.orderId} placed successfully! Opening WhatsApp...`, 3000);
 
         // Open WhatsApp in new tab, keep website open
-        window.open(whatsappUrl, '_blank');
+        setTimeout(() => window.open(whatsappUrl, '_blank'), 500);
     } else {
-        alert('❌ Error placing order: ' + result.error);
+        showError('Error placing order: ' + result.error);
     }
 }
+
+// Make location function globally available
+window.getCurrentLocation = getCurrentLocation;
+
+console.log('✅ cart.js loaded, getCurrentLocation available');
 
 // Initialize cart
 function initCart() {
@@ -268,6 +479,32 @@ function initCart() {
     const closeCart = document.getElementById('closeCart');
     if (closeCart) {
         closeCart.addEventListener('click', closeCartModal);
+    }
+
+    // Attach location button event listener (retry every 500ms until found)
+    const attachLocationButton = () => {
+        const btnGetLocation = document.getElementById('btnGetLocation');
+        if (btnGetLocation && !btnGetLocation.hasAttribute('data-listener-attached')) {
+            btnGetLocation.addEventListener('click', getCurrentLocation);
+            btnGetLocation.setAttribute('data-listener-attached', 'true');
+            console.log('✅ Location button listener attached');
+        }
+    };
+
+    // Try to attach immediately
+    attachLocationButton();
+
+    // Also try when checkout modal is shown
+    const checkoutModal = document.getElementById('checkoutModal');
+    if (checkoutModal) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.style.display === 'flex') {
+                    setTimeout(attachLocationButton, 100);
+                }
+            });
+        });
+        observer.observe(checkoutModal, { attributes: true, attributeFilter: ['style'] });
     }
 
     // Checkout button
